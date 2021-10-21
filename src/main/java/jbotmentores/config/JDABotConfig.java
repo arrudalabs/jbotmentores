@@ -12,7 +12,10 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.Compression;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -21,14 +24,17 @@ import javax.security.auth.login.LoginException;
 @Configuration
 public class JDABotConfig {
 
-
-    public String token = "OTAwNTQ3NzM2OTMwMjMwMzYy.YXC6bw.X3UP9rDl8RO63-ybsJ6J5_j25b8";
+    public final Environment environment;
 
     private JDA jda;
 
+    public JDABotConfig(Environment environment) {
+        this.environment = environment;
+    }
+
     @PostConstruct
     void start() throws LoginException, InterruptedException {
-        JDABuilder builder = JDABuilder.createDefault(token);
+        JDABuilder builder = JDABuilder.createDefault(environment.getProperty("BOT_TOKEN"));
         // Disable parts of the cache
         builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE);
         // Enable the bulk delete event
