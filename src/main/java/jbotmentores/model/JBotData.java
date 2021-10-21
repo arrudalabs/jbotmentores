@@ -63,7 +63,7 @@ public class JBotData {
     public Set<Skill> skillsByMentor(Mentor mentor) {
         try {
             readLock.lock();
-            return this.skillsByMentor.getOrDefault(mentor.email(), Set.of());
+            return this.skillsByMentor.getOrDefault(mentor.getEmail(), Set.of());
         } finally {
             readLock.unlock();
         }
@@ -73,8 +73,8 @@ public class JBotData {
         try {
             readLock.lock();
             TreeMap<LocalDate, Set<Slot>> map = new TreeMap<>();
-            this.slotsByMentor.getOrDefault(mentor.email(), Set.of())
-                    .forEach(slot -> map.computeIfAbsent(slot.from().toLocalDate(), k -> new LinkedHashSet<>()).add(slot));
+            this.slotsByMentor.getOrDefault(mentor.getEmail(), Set.of())
+                    .forEach(slot -> map.computeIfAbsent(slot.getFrom().toLocalDate(), k -> new LinkedHashSet<>()).add(slot));
             return map;
         } finally {
             readLock.unlock();
@@ -125,8 +125,8 @@ public class JBotData {
     private void register(Mentor mentor, Skill skill) {
         try {
             writeLock.lock();
-            this.skillsByMentor.computeIfAbsent(mentor.email(), k -> new LinkedHashSet<>()).add(skill);
-            this.mentorsBySkill.computeIfAbsent(skill, k -> new LinkedHashSet<>()).add(mentor.email());
+            this.skillsByMentor.computeIfAbsent(mentor.getEmail(), k -> new LinkedHashSet<>()).add(skill);
+            this.mentorsBySkill.computeIfAbsent(skill, k -> new LinkedHashSet<>()).add(mentor.getEmail());
         } finally {
             writeLock.unlock();
         }
@@ -150,8 +150,8 @@ public class JBotData {
     private void register(Mentor mentor, Slot slot) {
         try {
             writeLock.lock();
-            this.slotsByMentor.computeIfAbsent(mentor.email(), k -> new LinkedHashSet<>()).add(slot);
-            this.mentorsBySlot.computeIfAbsent(slot, k -> new LinkedHashSet<>()).add(mentor.email());
+            this.slotsByMentor.computeIfAbsent(mentor.getEmail(), k -> new LinkedHashSet<>()).add(slot);
+            this.mentorsBySlot.computeIfAbsent(slot, k -> new LinkedHashSet<>()).add(mentor.getEmail());
         } finally {
             writeLock.unlock();
         }

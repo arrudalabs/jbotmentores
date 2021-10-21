@@ -9,7 +9,23 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public record Slot(LocalDateTime from, LocalDateTime to) {
+public class Slot {
+
+    private final LocalDateTime from;
+    private final LocalDateTime to;
+
+    public Slot(LocalDateTime from, LocalDateTime to) {
+        this.from = from;
+        this.to = to;
+    }
+
+    public LocalDateTime getFrom() {
+        return from;
+    }
+
+    public LocalDateTime getTo() {
+        return to;
+    }
 
     private static final DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm") ;
 
@@ -65,5 +81,18 @@ public record Slot(LocalDateTime from, LocalDateTime to) {
 
     public String printTimeRange() {
         return String.format("%s - %s",this.from.format(timeFormat),this.to.format(timeFormat));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Slot slot = (Slot) o;
+        return Objects.equals(from, slot.from) && Objects.equals(to, slot.to);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(from, to);
     }
 }

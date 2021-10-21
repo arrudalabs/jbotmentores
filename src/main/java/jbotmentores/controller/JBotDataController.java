@@ -54,10 +54,38 @@ public class JBotDataController {
     }
 
 
-    static record MentorDTO(String email,
-                            String name,
-                            Set<Skill> skills,
-                            Map<LocalDate, Set<String>> slots) {
+    static class MentorDTO {
+
+        private final String email;
+        private final String name;
+        private final Set<Skill> skills;
+        private final Map<LocalDate, Set<String>> slots;
+
+        MentorDTO(String email,
+                  String name,
+                  Set<Skill> skills,
+                  Map<LocalDate, Set<String>> slots) {
+            this.email = email;
+            this.name = name;
+            this.skills = skills;
+            this.slots = slots;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Set<Skill> getSkills() {
+            return skills;
+        }
+
+        public Map<LocalDate, Set<String>> getSlots() {
+            return slots;
+        }
     }
 
     @GetMapping(value = "/skills")
@@ -71,8 +99,8 @@ public class JBotDataController {
         Map<Skill, SkillDTO> data = new LinkedHashMap<>();
         jBotData.skills()
                 .forEach(skill -> {
-                    data.computeIfAbsent(skill, k -> new SkillDTO(skill.name(), new LinkedHashSet<>()))
-                            .mentors().addAll(jBotData.mentoresBySkill(skill).map(this::getMentorDTO).collect(Collectors.toSet()));
+                    data.computeIfAbsent(skill, k -> new SkillDTO(skill.getName(), new LinkedHashSet<>()))
+                            .getMentors().addAll(jBotData.mentoresBySkill(skill).map(this::getMentorDTO).collect(Collectors.toSet()));
                 });
         return data.values();
     }
@@ -82,7 +110,7 @@ public class JBotDataController {
     public Map<LocalDate, Set<String>> listAllSlots() {
         Map<LocalDate, Set<String>> data = new TreeMap<>();
         jBotData.slots().forEach((localDate, slots) -> {
-            data.computeIfAbsent(localDate,k->new TreeSet<>()).addAll(slots.stream().map(Slot::printTimeRange).collect(Collectors.toList()));
+            data.computeIfAbsent(localDate, k -> new TreeSet<>()).addAll(slots.stream().map(Slot::printTimeRange).collect(Collectors.toList()));
         });
         return data;
     }
@@ -96,7 +124,7 @@ public class JBotDataController {
                 .forEach(entry -> {
                     SlotDTO slotDTO = data.computeIfAbsent(entry.getKey(), k -> new SlotDTO(new TreeMap<>()));
                     entry.getValue().forEach(slot -> {
-                        slotDTO.slots().computeIfAbsent(slot.printTimeRange(), k -> new LinkedHashSet<>())
+                        slotDTO.getSlots().computeIfAbsent(slot.printTimeRange(), k -> new LinkedHashSet<>())
                                 .addAll(jBotData.mentoresBySlot(slot).map(this::getMentorDTO).collect(Collectors.toSet()));
                     });
                 });
@@ -105,13 +133,13 @@ public class JBotDataController {
 
     private MentorDTO getMentorDTO(Mentor mentor) {
         return new MentorDTO(
-                mentor.email(),
-                mentor.name(),
+                mentor.getEmail(),
+                mentor.getName(),
                 jBotData.skillsByMentor(mentor),
                 Optional.of(jBotData.slotsByMentor(mentor)).map(localDateSetMap -> {
-                    Map<LocalDate,Set<String>> data=new TreeMap<>();
+                    Map<LocalDate, Set<String>> data = new TreeMap<>();
                     localDateSetMap.forEach((localDate, slots) -> {
-                        data.computeIfAbsent(localDate,k->new TreeSet<>())
+                        data.computeIfAbsent(localDate, k -> new TreeSet<>())
                                 .addAll(slots.stream().map(Slot::printTimeRange).collect(Collectors.toSet()));
                     });
                     return data;
@@ -119,12 +147,36 @@ public class JBotDataController {
         );
     }
 
-    static record SkillDTO(String name, Set<MentorDTO> mentors) {
+    static class SkillDTO {
+        private final String name;
+        private final Set<MentorDTO> mentors;
 
+        SkillDTO(String name, Set<MentorDTO> mentors) {
+
+            this.name = name;
+            this.mentors = mentors;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Set<MentorDTO> getMentors() {
+            return mentors;
+        }
     }
 
-    static record SlotDTO(Map<String, Set<MentorDTO>> slots) {
+    static class SlotDTO {
+        private final Map<String, Set<MentorDTO>> slots;
 
+        SlotDTO(Map<String, Set<MentorDTO>> slots) {
+
+            this.slots = slots;
+        }
+
+        public Map<String, Set<MentorDTO>> getSlots() {
+            return slots;
+        }
     }
 }
 
