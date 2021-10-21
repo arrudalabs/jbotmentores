@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.temporal.ChronoField;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -85,6 +86,22 @@ public class JBotDataController {
 
         public Map<LocalDate, Set<String>> getSlots() {
             return slots;
+        }
+
+        public String toString(boolean printDay) {
+            var slotsFormatted = formatSlots(printDay);
+            return String.format("%s - Pode ajudar com: %s - %s ", name, skills.toString(), slotsFormatted);
+        }
+
+        private String formatSlots(boolean printDay) {
+            StringBuilder result = new StringBuilder();
+            for (LocalDate date : slots.keySet()) {
+                if (printDay)
+                    result.append("Dia: ").append(date.get(ChronoField.DAY_OF_MONTH)).append(" ");
+
+                result.append("Horarios: ").append(slots.get(date).toString()).append("\n");
+            }
+            return result.toString();
         }
     }
 
