@@ -76,9 +76,9 @@ public class JDABotConfig {
                                                 .addChoice("23", 23)
                                                 .addChoice("24", 24))
                                         .addOptions(new OptionData(OptionType.STRING, "skill", "Informe o skill"))
-                                        .addOptions(new OptionData(OptionType.USER, "user", "Mencione o mentor")),
-                                new SubcommandData("ativar", "Ativar mentor")
-                                        .addOptions(new OptionData(OptionType.STRING, "e-mail", "E-mail do mentor"))
+                                        .addOptions(new OptionData(OptionType.USER, "user", "Mencione o mentor"))
+//                                ,new SubcommandData("ativar", "Ativar mentor")
+//                                        .addOptions(new OptionData(OptionType.STRING, "e-mail", "E-mail do mentor"))
                         )
                 // This command requires a parameter
         );
