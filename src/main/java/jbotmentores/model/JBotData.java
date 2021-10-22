@@ -7,13 +7,10 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
-import java.util.stream.Stream;
 
 @Component
 public class JBotData {
@@ -22,15 +19,9 @@ public class JBotData {
     private final Lock readLock = lock.readLock();
     private final Lock writeLock = lock.writeLock();
 
-    private Map<String, Mentor> mentorsByEmail = new HashMap<>();
-    private Map<String, Skill> skills = new HashMap<>();
-    private Map<LocalDate, Set<Slot>> slots = new TreeMap<>();
-    private Map<Skill, Set<String>> mentorsBySkill = new HashMap<>();
-    private Map<String, Set<Skill>> skillsByMentor = new HashMap<>();
-    private Map<Slot, Set<String>> mentorsBySlot = new HashMap<>();
-    private Map<String, Set<Slot>> slotsByMentor = new HashMap<>();
+    public Set<Mentor> mentores = new HashSet<>();
 
-    public Stream<Mentor> mentores() {
+ /*   public Stream<Mentor> mentores() {
         try {
             readLock.lock();
             return new LinkedHashSet<>(this.mentorsByEmail.values()).stream();
@@ -101,111 +92,65 @@ public class JBotData {
         }
     }
 
-    private Skill skillOf(String name) {
+
+*/
+
+
+    private void clearAll() {
         try {
             writeLock.lock();
-            return this.skills.computeIfAbsent(name, k -> new Skill(name));
+            this.mentores.clear();
         } finally {
             writeLock.unlock();
         }
     }
-
-    private Slot slotOf(LocalDateTime from, LocalDateTime to) {
-        try {
-            writeLock.lock();
-            Slot slot = new Slot(from, to);
-            this.slots.computeIfAbsent(from.toLocalDate(), k -> new LinkedHashSet<>()).add(slot);
-            return slot;
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-
-    private void register(Mentor mentor, Skill skill) {
-        try {
-            writeLock.lock();
-            this.skillsByMentor.computeIfAbsent(mentor.getEmail(), k -> new LinkedHashSet<>()).add(skill);
-            this.mentorsBySkill.computeIfAbsent(skill, k -> new LinkedHashSet<>()).add(mentor.getEmail());
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    private void clearAll(){
-        try {
-            writeLock.lock();
-          this.mentorsByEmail.clear();
-            this. skills.clear();
-            this.slots .clear();
-            this.mentorsBySkill.clear();
-            this.skillsByMentor .clear();
-            this.mentorsBySlot.clear();
-            this.slotsByMentor.clear();
-        }finally {
-            writeLock.unlock();
-        }
-    }
-
-    private void register(Mentor mentor, Slot slot) {
-        try {
-            writeLock.lock();
-            this.slotsByMentor.computeIfAbsent(mentor.getEmail(), k -> new LinkedHashSet<>()).add(slot);
-            this.mentorsBySlot.computeIfAbsent(slot, k -> new LinkedHashSet<>()).add(mentor.getEmail());
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    //
 
     private void processData(Map<Integer, String> data) {
         try {
             writeLock.lock();
-            var mentor = mentorOf(data.get(0), data.get(1));
+
+            var name = data.get(0);
+            var email = data.get(1);
+
             String[] skillsData =
-                    data.getOrDefault(2,"").replaceAll("\\n", " ").replaceAll("/",",").split(",");
-
+                    data.getOrDefault(2, "").replaceAll("\\n", " ").replaceAll("/", ",").split(",");
             var skills = Arrays
-                    .stream(skillsData).map(String::trim).map(sd -> skillOf(sd))
-                    .map(skill -> {
-                        register(mentor, skill);
-                        return skill;
-                    }).collect(Collectors.toList());
+                    .stream(skillsData).map(String::trim).map(Skill::new)
+                    .collect(Collectors.toSet());
 
+            Set<Slot> slots = new TreeSet<>();
             String dia22 = data.getOrDefault(3, "");
-            loadDay(mentor, LocalDate.of(2021, 10, 22), dia22);
+            slots.addAll(loadDay(LocalDate.of(2021, 10, 22), dia22));
             String dia23 = data.getOrDefault(4, "");
-            loadDay(mentor, LocalDate.of(2021, 10, 23), dia23);
+            slots.addAll(loadDay(LocalDate.of(2021, 10, 23), dia23));
             String dia24 = data.getOrDefault(5, "");
-            loadDay(mentor, LocalDate.of(2021, 10, 24), dia24);
+            slots.addAll(loadDay(LocalDate.of(2021, 10, 24), dia24));
+
+            Mentor mentor = new Mentor(name, email, skills, slots);
+            mentores.add(mentor);
+
         } finally {
             writeLock.unlock();
         }
     }
 
 
-    private void loadDay(Mentor mentor,
-                         LocalDate day,
-                         String dia22) {
+    private List<Slot> loadDay(
+            LocalDate day,
+            String dia22) {
         String[] slotData =
                 dia22.replaceAll("\\*nãoestoudisponívelnessedia\\*", "")
                         .replaceAll(" ", "")
                         .replaceAll("24h", "23h59")
                         .split(",");
-        var mentorSlot =
+        return
                 Arrays.stream(slotData)
                         .map(String::trim)
                         .filter(d -> !"*nãoestoudisponívelnessedia*".equals(d)).map(sd -> {
                             var horas = sd.split("-");
                             var from = Slot.parseToLocalDateTime(day, horas[0]);
                             var to = Slot.parseToLocalDateTime(day, horas.length > 1 ? horas[1] : horas[0]);
-                            Slot slot = slotOf(from, to);
-                            return slot;
-                        })
-                        .map(slot -> {
-                            register(mentor, slot);
-                            return slot;
+                            return new Slot(from, to);
                         })
                         .collect(Collectors.toList());
     }
@@ -222,7 +167,7 @@ public class JBotData {
                 System.out.println(wb.getSheetName(i));
 
                 for (Row row : sheet) {
-                    if(row.getRowNum()>1) {
+                    if (row.getRowNum() > 1) {
                         System.out.println("rownum: " + row.getRowNum());
                         Map<Integer, String> data = new LinkedHashMap<>();
                         for (Cell cell : row) {
@@ -240,11 +185,12 @@ public class JBotData {
                     }
                 }
             }
-        }finally {
+        } finally {
             writeLock.unlock();
         }
     }
 
+/*
     public Stream<Mentor> mentoresBySkill(Skill skill) {
         try {
             readLock.lock();
@@ -261,5 +207,5 @@ public class JBotData {
         } finally {
             readLock.unlock();
         }
-    }
+    }*/
 }
