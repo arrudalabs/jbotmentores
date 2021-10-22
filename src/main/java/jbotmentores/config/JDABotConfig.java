@@ -67,12 +67,14 @@ public class JDABotConfig {
 
         // Moderation commands with required options
         commands.addCommands(
-                new CommandData("mentor", "Listar mentores disponiveis por data")
+                new CommandData("mentor", "Confira a info sobre os mentores do evento")
                         .addSubcommands(
                                 new SubcommandData("list", "lista mentores")
                                         .addOptions(new OptionData(OptionType.INTEGER, "dia", "Informe o dia (22 | 23 | 24)"))
                                         .addOptions(new OptionData(OptionType.STRING, "skill", "Informe o skill"))
-                                        .addOptions(new OptionData(OptionType.USER, "user", "Mencione o mentor"))
+                                        .addOptions(new OptionData(OptionType.USER, "user", "Mencione o mentor")),
+                                new SubcommandData("ativar", "Ativar mentor")
+                                        .addOptions(new OptionData(OptionType.STRING, "e-mail", "E-mail do mentor"))
                         )
                 // This command requires a parameter
         );

@@ -20,27 +20,39 @@ public class BotMessageListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandEvent event) {
+        if ("ativar".equals(event.getSubcommandName())) {
+            activateMentor(event, event.getOption("email").getAsString());
+            return;
+        }
         if ("list".equals(event.getSubcommandName())) {
             if (event.getOptions().stream().anyMatch(o -> o.getName().contains("dia"))) {
                 listMentorsByDay(event, event.getOption("dia").getAsLong());
-            }
-
-            if (event.getOptions().stream().anyMatch(o -> o.getName().contains("skill"))) {
+                return;
+            } else if (event.getOptions().stream().anyMatch(o -> o.getName().contains("skill"))) {
                 listMentorsBySkill(event, event.getOption("skill").getAsString());
-            }
-
-            if (event.getOptions().stream().anyMatch(o -> o.getName().contains("user"))) {
+                return;
+            } else if (event.getOptions().stream().anyMatch(o -> o.getName().contains("user"))) {
                 listUser(event, event.getOption("user").getAsUser());
+                return;
             }
         }
-    }
-
-    private void listUser(SlashCommandEvent event, User user) {
-
-        event.reply("Entendi: " + event.getCommandPath() + " " + event.getSubcommandGroup() + " " + event.getOptions())
+        event.reply("Desculpe, mas não entendi sua solicitação :anguished:")
                 .setEphemeral(true)
                 .queue();
 
+    }
+
+    private void listUser(SlashCommandEvent event, User user) {
+        event.reply("Desculpe, mas ainda não estou pronto  :anguished:")
+                .setEphemeral(true)
+                .queue();
+
+    }
+
+    private void listMentorsByDay(SlashCommandEvent event, Long dia) {
+        event.reply("Desculpe, mas ainda não estou pronto  :anguished:")
+                .setEphemeral(true)
+                .queue();
     }
 
     private void listMentorsBySkill(SlashCommandEvent event, String skill) {
@@ -56,8 +68,8 @@ public class BotMessageListener extends ListenerAdapter {
                     String response = mentores.stream().map(Mentor::getName)
                             .collect(Collectors.joining("\n"));
 
-                    if(response.isEmpty()){
-                        response="Desculpe, mas não encontrei mentores com esse skill  :anguished:";
+                    if (response.isEmpty()) {
+                        response = "Desculpe, mas não encontrei mentores com esse skill  :anguished:";
                     }
 
                     hook.getInteraction().getMember().getUser().getAsTag();
@@ -66,7 +78,9 @@ public class BotMessageListener extends ListenerAdapter {
         );
     }
 
-    private void listMentorsByDay(SlashCommandEvent event, Long dia) {
-
+    private void activateMentor(SlashCommandEvent event, String email) {
+        event.reply("Desculpe, mas ainda não estou pronto  :anguished:")
+                .setEphemeral(true)
+                .queue();
     }
 }
