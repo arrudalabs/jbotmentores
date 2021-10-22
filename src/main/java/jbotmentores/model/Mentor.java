@@ -43,6 +43,11 @@ public class Mentor {
         return skills;
     }
 
+    @Override
+    public String toString() {
+        return this.toString(true);
+    }
+
     public String toString(boolean printDay) {
         var slotsFormatted = formatSlots(printDay);
         return String.format("%s - Pode ajudar com: %s - %s ", name, skills.toString(), slotsFormatted);
