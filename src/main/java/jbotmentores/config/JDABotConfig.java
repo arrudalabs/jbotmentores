@@ -7,7 +7,12 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.api.utils.Compression;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +21,7 @@ import org.springframework.core.env.Environment;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.security.auth.login.LoginException;
+import java.util.Collections;
 
 @Configuration
 public class JDABotConfig {
@@ -48,9 +54,30 @@ public class JDABotConfig {
 
         this.jda = builder.build();
 
+        updateCommands(this.jda);
+
         // optionally block until JDA is ready
         jda.awaitReady();
 
+    }
+
+    private void updateCommands(JDA jda) {
+        // These commands take up to an hour to be activated after creation/update/delete
+        CommandListUpdateAction commands = jda.updateCommands();
+
+        // Moderation commands with required options
+        commands.addCommands(
+                new CommandData("mentor", "Listar mentores disponiveis por data")
+                        .addSubcommands(
+                                new SubcommandData("list", "lista mentores")
+                                        .addOptions(new OptionData(OptionType.INTEGER, "dia", "Informe o dia (22 | 23 | 24)"))
+                                        .addOptions(new OptionData(OptionType.STRING, "skill", "Informe o skill"))
+                                        .addOptions(new OptionData(OptionType.USER, "user", "Mencione o mentor"))
+                        )
+                // This command requires a parameter
+        );
+        // Send the new set of commands to discord, this will override any existing global commands with the new set provided here
+        commands.queue();
     }
 
     @PreDestroy
