@@ -1,21 +1,16 @@
 package jbotmentores.controller;
 
 import jbotmentores.model.JBotData;
-import jbotmentores.model.Mentor;
-import jbotmentores.model.Skill;
-import jbotmentores.model.Slot;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.transaction.Transactional;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin("*")
@@ -39,52 +34,6 @@ public class JBotDataController {
             throws IOException {
         jBotData.updateDataFrom(xlsxFile.getInputStream());
         return ResponseEntity.status(201).body(xlsxFile.getSize());
-    }
-
-    @GetMapping(value = "/mentors")
-    @Cacheable("listAllMentors")
-    public Collection<MentorDTO> listAllMentors() {
-        return jBotData.getMentores().stream().map(MentorDTO::fromMentor).collect(Collectors.toList());
-    }
-
-
-    static class MentorDTO {
-
-        private final String email;
-        private final String name;
-        private final Set<Skill> skills;
-        private final Set<Slot> slots;
-
-        MentorDTO(String email,
-                  String name,
-                  Set<Skill> skills,
-                  Set<Slot> slots) {
-            this.email = email;
-            this.name = name;
-            this.skills = skills;
-            this.slots = slots;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public Set<Skill> getSkills() {
-            return skills;
-        }
-
-        public Set<Slot> getSlots() {
-            return slots;
-        }
-
-        public static MentorDTO fromMentor(Mentor mentor) {
-            return new MentorDTO(mentor.getEmail(), mentor.getName(), mentor.getSkills(), mentor.getSlots());
-        }
-
     }
 
 /*

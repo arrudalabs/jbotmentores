@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -70,7 +71,10 @@ public class JDABotConfig {
                 new CommandData("mentor", "Confira a info sobre os mentores do evento")
                         .addSubcommands(
                                 new SubcommandData("list", "lista mentores")
-                                        .addOptions(new OptionData(OptionType.INTEGER, "dia", "Informe o dia (22 | 23 | 24)"))
+                                        .addOptions(new OptionData(OptionType.INTEGER, "dia", "Informe o dia (22 | 23 | 24)")
+                                                .addChoice("22", 22)
+                                                .addChoice("23", 23)
+                                                .addChoice("24", 24))
                                         .addOptions(new OptionData(OptionType.STRING, "skill", "Informe o skill"))
                                         .addOptions(new OptionData(OptionType.USER, "user", "Mencione o mentor")),
                                 new SubcommandData("ativar", "Ativar mentor")
