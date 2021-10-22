@@ -1,5 +1,6 @@
 package jbotmentores.model;
 
+import java.time.temporal.ChronoField;
 import java.util.Objects;
 import java.util.Set;
 
@@ -40,6 +41,25 @@ public class Mentor {
 
     public Set<Skill> getSkills() {
         return skills;
+    }
+
+    public String toString(boolean printDay) {
+        var slotsFormatted = formatSlots(printDay);
+        return String.format("%s - Pode ajudar com: %s - %s ", name, skills.toString(), slotsFormatted);
+    }
+
+    private String formatSlots(boolean printDay) {
+        StringBuilder result = new StringBuilder();
+        for (Slot s : slots) {
+            if (printDay)
+                result.append("Dia: ").append(s.getFrom().get(ChronoField.DAY_OF_MONTH)).append(" ");
+
+            result.append("Horarios: ").append(s.getFrom().toLocalTime())
+                    .append("-")
+                    .append(s.getTo().toLocalTime())
+                    .append("\n");
+        }
+        return result.toString();
     }
 
     public Set<Slot> getSlots() {
