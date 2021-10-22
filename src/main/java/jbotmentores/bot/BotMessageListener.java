@@ -39,14 +39,14 @@ public class BotMessageListener extends ListenerAdapter {
     }
 
     private void listMentorsBySkill(SlashCommandEvent event, String skill) {
-       // jBotData.mentores.stream().filter(m -> m.getSkills().stream().filter(s -> s.getName().toLowerCase().contains(skill.toLowerCase())))
+        var mentores = jBotData.mentores.stream().filter(m -> m.getSkills().stream().anyMatch(s -> s.getName().toLowerCase().contains(skill.toLowerCase())));
 
-                event.reply("Entendi: " + event.getCommandPath() + " " + event.getSubcommandGroup() + " " + event.getOptions())
-                        .setEphemeral(true)
-                        .queue();
-
+        event.reply(mentores.toString())
+                .setEphemeral(true)
+                .queue();
     }
 
     private void listMentorsByDay(SlashCommandEvent event, Long dia) {
+
     }
 }
