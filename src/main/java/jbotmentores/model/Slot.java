@@ -2,6 +2,7 @@ package jbotmentores.model;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.persistence.Embeddable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -11,22 +12,38 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Embeddable
 public class Slot implements Comparable<Slot> {
 
-    private final LocalDateTime from;
-    private final LocalDateTime to;
+    private LocalDateTime startAt;
+    private LocalDateTime endAt;
+
+    /**
+     * Don't use it! It's required by JPA
+     */
+    @Deprecated
+    public Slot() {
+    }
 
     public Slot(LocalDateTime from, LocalDateTime to) {
-        this.from = from;
-        this.to = to;
+        this.startAt = from;
+        this.endAt = to;
     }
 
-    public LocalDateTime getFrom() {
-        return from;
+    public LocalDateTime getStartAt() {
+        return startAt;
     }
 
-    public LocalDateTime getTo() {
-        return to;
+    public LocalDateTime getEndAt() {
+        return endAt;
+    }
+
+    public void setStartAt(LocalDateTime from) {
+        this.startAt = from;
+    }
+
+    public void setEndAt(LocalDateTime to) {
+        this.endAt = to;
     }
 
     private static final DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm") ;
@@ -37,9 +54,9 @@ public class Slot implements Comparable<Slot> {
         }
         return this.equals(dateTimeRange)
                 ||
-                ((this.from.isEqual(dateTimeRange.from) || this.from.isBefore(dateTimeRange.from)
+                ((this.startAt.isEqual(dateTimeRange.startAt) || this.startAt.isBefore(dateTimeRange.startAt)
                         &&
-                        (this.to.isEqual(dateTimeRange.to) || this.to.isAfter(dateTimeRange.to))));
+                        (this.endAt.isEqual(dateTimeRange.endAt) || this.endAt.isAfter(dateTimeRange.endAt))));
     }
 
     public boolean isWithinRange(LocalDateTime localDateTime) {
@@ -82,7 +99,7 @@ public class Slot implements Comparable<Slot> {
     }
 
     public String printTimeRange() {
-        return String.format("%s - %s",this.from.format(timeFormat),this.to.format(timeFormat));
+        return String.format("%s - %s",this.startAt.format(timeFormat),this.endAt.format(timeFormat));
     }
 
     @Override
@@ -90,16 +107,16 @@ public class Slot implements Comparable<Slot> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Slot slot = (Slot) o;
-        return Objects.equals(from, slot.from) && Objects.equals(to, slot.to);
+        return Objects.equals(startAt, slot.startAt) && Objects.equals(endAt, slot.endAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(from, to);
+        return Objects.hash(startAt, endAt);
     }
 
     @Override
     public int compareTo(@NotNull Slot o) {
-        return this.getFrom().compareTo(o.from);
+        return this.getStartAt().compareTo(o.startAt);
     }
 }

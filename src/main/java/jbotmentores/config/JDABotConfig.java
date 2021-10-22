@@ -26,15 +26,15 @@ import java.util.Collections;
 @Configuration
 public class JDABotConfig {
 
-    public final Environment environment;
-
+    private final Environment environment;
+    private final BotMessageListener messageListener;
     private JDA jda;
-
     private JBotData jBotData;
 
-    public JDABotConfig(Environment environment, JBotData jBotData) {
+    public JDABotConfig(Environment environment, JBotData jBotData, BotMessageListener messageListener) {
         this.environment = environment;
         this.jBotData = jBotData;
+        this.messageListener = messageListener;
     }
 
     @PostConstruct
@@ -50,7 +50,7 @@ public class JDABotConfig {
         configureMemoryUsage(builder);
 
         builder.addEventListeners(new ReadyListener());
-        builder.addEventListeners(new BotMessageListener(jBotData));
+        builder.addEventListeners(messageListener);
 
         this.jda = builder.build();
 

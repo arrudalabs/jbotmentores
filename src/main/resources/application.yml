@@ -1,0 +1,18 @@
+#documentacao do swagger
+springdoc:
+  packagesToScan: jbotmentores.controller
+  api-docs:
+    enabled: true
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL94Dialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:54333/jbotmentores
+    username: jbotmentores
+    password: pass1234

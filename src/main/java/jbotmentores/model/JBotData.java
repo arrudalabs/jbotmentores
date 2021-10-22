@@ -2,8 +2,15 @@ package jbotmentores.model;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
 
+import javax.transaction.Transactional;
+import javax.validation.Valid;
+import javax.validation.Validator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
@@ -11,121 +18,52 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component
+@Validated
 public class JBotData {
+
+    private static final Logger logger = LoggerFactory.getLogger(JBotData.class);
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     private final Lock readLock = lock.readLock();
     private final Lock writeLock = lock.writeLock();
 
-    public Set<Mentor> mentores = new HashSet<>();
+    private Validator validator;
+    private MentorRepository mentorRepository;
+    private DiscordInfoRepository discordInfoRepository;
 
- /*   public Stream<Mentor> mentores() {
-        try {
-            readLock.lock();
-            return new LinkedHashSet<>(this.mentorsByEmail.values()).stream();
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public Stream<Skill> skills() {
-        try {
-            readLock.lock();
-            return new LinkedHashSet<>(this.skills.values()).stream();
-        } finally {
-            readLock.unlock();
-        }
+    public JBotData(Validator validator, MentorRepository mentorRepository, DiscordInfoRepository discordInfoRepository) {
+        this.validator = validator;
+        this.mentorRepository = mentorRepository;
+        this.discordInfoRepository = discordInfoRepository;
     }
 
 
-    public Map<LocalDate, Set<Slot>> slots() {
-        try {
-            readLock.lock();
-            TreeMap map = new TreeMap<>();
-            map.putAll(this.slots);
-            return map;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public Set<Skill> skillsByMentor(Mentor mentor) {
-        try {
-            readLock.lock();
-            return this.skillsByMentor.getOrDefault(mentor.getEmail(), Set.of());
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public Map<LocalDate, Set<Slot>> slotsByMentor(Mentor mentor) {
-        try {
-            readLock.lock();
-            TreeMap<LocalDate, Set<Slot>> map = new TreeMap<>();
-            this.slotsByMentor.getOrDefault(mentor.getEmail(), Set.of())
-                    .forEach(slot -> map.computeIfAbsent(slot.getFrom().toLocalDate(), k -> new LinkedHashSet<>()).add(slot));
-            return map;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    private Mentor mentorByEmail(String email) {
-        try {
-            readLock.lock();
-            Mentor mentor = this.mentorsByEmail.get(email);
-            return mentor;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    private Mentor mentorOf(String name, String email) {
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    protected void clearAll() {
         try {
             writeLock.lock();
-            Mentor mentor = this.mentorsByEmail.computeIfAbsent(email, k -> new Mentor(email, name));
-            return mentor;
+            this.mentorRepository.deleteAll();
         } finally {
             writeLock.unlock();
         }
     }
 
 
-*/
-
-
-    public Set<Mentor> getMentores() {
-        try {
-            readLock.lock();
-            return new HashSet<>(this.mentores);
-        }finally {
-            readLock.unlock();
-        }
-    }
-
-    private void clearAll() {
-        try {
-            writeLock.lock();
-            this.mentores.clear();
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    private void processData(Map<Integer, String> data) {
+    protected void processData(Map<Integer, String> data) {
         try {
             writeLock.lock();
 
             var name = data.get(0);
             var email = data.get(1);
 
+
             String[] skillsData =
                     data.getOrDefault(2, "").replaceAll("\\n", " ").replaceAll("/", ",").split(",");
             var skills = Arrays
-                    .stream(skillsData).map(String::trim).map(Skill::new)
+                    .stream(skillsData)
+                    .map(String::trim)
                     .collect(Collectors.toSet());
 
             Set<Slot> slots = new TreeSet<>();
@@ -136,12 +74,29 @@ public class JBotData {
             String dia24 = data.getOrDefault(5, "");
             slots.addAll(loadDay(LocalDate.of(2021, 10, 24), dia24));
 
-            Mentor mentor = new Mentor(name, email, skills, slots);
-            mentores.add(mentor);
 
+            Mentor mentor = new Mentor(email, name, skills, slots);
+
+            saveMentor(mentor);
         } finally {
             writeLock.unlock();
         }
+    }
+
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    public void saveMentor(@Valid Mentor mentor) {
+        mentorRepository.save(mentor);
+        discordInfoRepository
+                .findByMentor(mentor)
+                .ifPresentOrElse(
+                        info -> {
+                            logger.info("{} user is activated already", info.getMentorEmail());
+                        },
+                        () -> {
+                            DiscordInfo discordInfo = new DiscordInfo(mentor);
+                            discordInfoRepository.save(discordInfo);
+                            logger.info("{} user needs to be activated", discordInfo.getMentorEmail());
+                        });
     }
 
 
@@ -175,7 +130,9 @@ public class JBotData {
             for (int i = 0; i < wb.getNumberOfSheets(); i++) {
                 Sheet sheet = wb.getSheetAt(i);
                 System.out.println(wb.getSheetName(i));
-
+                if(!"Mentoria | colabfest 2021".equalsIgnoreCase(wb.getSheetName(i))){
+                    continue;
+                }
                 for (Row row : sheet) {
                     if (row.getRowNum() > 1) {
                         System.out.println("rownum: " + row.getRowNum());
@@ -199,23 +156,4 @@ public class JBotData {
             writeLock.unlock();
         }
     }
-
-/*
-    public Stream<Mentor> mentoresBySkill(Skill skill) {
-        try {
-            readLock.lock();
-            return this.mentorsBySkill.getOrDefault(skill, Set.of()).stream().map(this::mentorByEmail).collect(Collectors.toCollection(LinkedHashSet::new)).stream();
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public Stream<Mentor> mentoresBySlot(Slot slot) {
-        try {
-            readLock.lock();
-            return this.mentorsBySlot.getOrDefault(slot, Set.of()).stream().map(this::mentorByEmail).collect(Collectors.toCollection(LinkedHashSet::new)).stream();
-        } finally {
-            readLock.unlock();
-        }
-    }*/
 }

@@ -1,22 +1,49 @@
 package jbotmentores.model;
 
+import org.springframework.util.StringUtils;
+
+import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
 import java.time.temporal.ChronoField;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
-
+@Entity
 public class Mentor {
 
-    private final String email;
-    private final String name;
-    private final Set<Skill> skills;
-    private final Set<Slot> slots;
+    @Id
+    @NotNull
+    @Email
+    private String email;
+    private String name;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "mentor_skills",
+            joinColumns = @JoinColumn(name = "mentor_email")
+    )
+    private Set<String> skills;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "mentor_slots",
+            joinColumns = @JoinColumn(name = "mentor_email")
+    )
+    private Set<Slot> slots;
 
-    public Mentor(String email, String name, Set<Skill> skills, Set<Slot> slots) {
+    /**
+     * Don't use it! It's required by JPA
+     */
+    @Deprecated
+    public Mentor() {
+    }
+
+    public Mentor(String email, String name, Set<String> skills, Set<Slot> slots) {
         this.email = email;
         this.name = name;
-        this.skills = skills;
-        this.slots = slots;
+        this.skills = skills.stream().filter(StringUtils::hasText).collect(Collectors.toCollection(TreeSet::new));
+        this.slots = slots.stream().filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
     }
 
     public String getEmail() {
@@ -40,7 +67,7 @@ public class Mentor {
         return Objects.hash(email, name);
     }
 
-    public Set<Skill> getSkills() {
+    public Set<String> getSkills() {
         return skills;
     }
 
@@ -58,11 +85,11 @@ public class Mentor {
         StringBuilder result = new StringBuilder();
         for (Slot s : slots) {
             if (printDay)
-                result.append("Dia: ").append(s.getFrom().get(ChronoField.DAY_OF_MONTH)).append(" ");
+                result.append("Dia: ").append(s.getStartAt().get(ChronoField.DAY_OF_MONTH)).append(" ");
 
-            result.append("Horarios: ").append(s.getFrom().toLocalTime())
+            result.append("Horarios: ").append(s.getStartAt().toLocalTime())
                     .append("-")
-                    .append(s.getTo().toLocalTime())
+                    .append(s.getEndAt().toLocalTime())
                     .append("\n");
         }
         return result.toString();

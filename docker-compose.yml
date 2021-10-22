@@ -1,0 +1,16 @@
+version: '3.1'
+
+services:
+  postgresql:
+    # jdbc:postgresql://localhost:54333/guest?user=guest&password=guest
+    image: postgres
+    env_file:
+      - './.env'
+    ports:
+      - '54333:5432'
+    volumes:
+      - "/var/run/postgres/postgres.sock:/var/run/postgres/postgres.sock"
+      - "jbotmentores:/var/lib/postgresql/data"
+volumes:
+  jbotmentores:
+    external: true
