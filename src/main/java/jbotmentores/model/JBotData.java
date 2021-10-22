@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component
 public class JBotData {
@@ -20,88 +19,34 @@ public class JBotData {
     private final Lock readLock = lock.readLock();
     private final Lock writeLock = lock.writeLock();
 
+
+    // TODO colocar como private
     public Set<Mentor> mentores = new HashSet<>();
 
- /*   public Stream<Mentor> mentores() {
-        try {
-            readLock.lock();
-            return new LinkedHashSet<>(this.mentorsByEmail.values()).stream();
-        } finally {
-            readLock.unlock();
+    /*
+        private Mentor mentorByEmail(String email) {
+            try {
+                readLock.lock();
+                Mentor mentor = this.mentorsByEmail.get(email);
+                return mentor;
+            } finally {
+                readLock.unlock();
+            }
         }
+    */
+    public List<Mentor> listMentoresBySkill(String skill) {
+        return this.getMentores()
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(m -> m.getSkills().stream().anyMatch(s -> s.getName().toLowerCase().contains(skill.toLowerCase())))
+                .collect(Collectors.toList());
     }
-
-    public Stream<Skill> skills() {
-        try {
-            readLock.lock();
-            return new LinkedHashSet<>(this.skills.values()).stream();
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-
-    public Map<LocalDate, Set<Slot>> slots() {
-        try {
-            readLock.lock();
-            TreeMap map = new TreeMap<>();
-            map.putAll(this.slots);
-            return map;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public Set<Skill> skillsByMentor(Mentor mentor) {
-        try {
-            readLock.lock();
-            return this.skillsByMentor.getOrDefault(mentor.getEmail(), Set.of());
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public Map<LocalDate, Set<Slot>> slotsByMentor(Mentor mentor) {
-        try {
-            readLock.lock();
-            TreeMap<LocalDate, Set<Slot>> map = new TreeMap<>();
-            this.slotsByMentor.getOrDefault(mentor.getEmail(), Set.of())
-                    .forEach(slot -> map.computeIfAbsent(slot.getFrom().toLocalDate(), k -> new LinkedHashSet<>()).add(slot));
-            return map;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    private Mentor mentorByEmail(String email) {
-        try {
-            readLock.lock();
-            Mentor mentor = this.mentorsByEmail.get(email);
-            return mentor;
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    private Mentor mentorOf(String name, String email) {
-        try {
-            writeLock.lock();
-            Mentor mentor = this.mentorsByEmail.computeIfAbsent(email, k -> new Mentor(email, name));
-            return mentor;
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-
-*/
-
 
     public Set<Mentor> getMentores() {
         try {
             readLock.lock();
             return new HashSet<>(this.mentores);
-        }finally {
+        } finally {
             readLock.unlock();
         }
     }
@@ -128,9 +73,8 @@ public class JBotData {
                     .stream(skillsData).map(String::trim).map(Skill::new)
                     .collect(Collectors.toSet());
 
-            Set<Slot> slots = new TreeSet<>();
             String dia22 = data.getOrDefault(3, "");
-            slots.addAll(loadDay(LocalDate.of(2021, 10, 22), dia22));
+            Set<Slot> slots = new TreeSet<>(loadDay(LocalDate.of(2021, 10, 22), dia22));
             String dia23 = data.getOrDefault(4, "");
             slots.addAll(loadDay(LocalDate.of(2021, 10, 23), dia23));
             String dia24 = data.getOrDefault(5, "");
@@ -200,22 +144,4 @@ public class JBotData {
         }
     }
 
-/*
-    public Stream<Mentor> mentoresBySkill(Skill skill) {
-        try {
-            readLock.lock();
-            return this.mentorsBySkill.getOrDefault(skill, Set.of()).stream().map(this::mentorByEmail).collect(Collectors.toCollection(LinkedHashSet::new)).stream();
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    public Stream<Mentor> mentoresBySlot(Slot slot) {
-        try {
-            readLock.lock();
-            return this.mentorsBySlot.getOrDefault(slot, Set.of()).stream().map(this::mentorByEmail).collect(Collectors.toCollection(LinkedHashSet::new)).stream();
-        } finally {
-            readLock.unlock();
-        }
-    }*/
 }

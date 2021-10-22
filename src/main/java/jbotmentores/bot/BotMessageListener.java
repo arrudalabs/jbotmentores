@@ -2,7 +2,6 @@ package jbotmentores.bot;
 
 import jbotmentores.model.JBotData;
 import jbotmentores.model.Mentor;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -53,17 +52,13 @@ public class BotMessageListener extends ListenerAdapter {
         event.reply("Desculpe, mas ainda não estou pronto  :anguished:")
                 .setEphemeral(true)
                 .queue();
+
     }
 
     private void listMentorsBySkill(SlashCommandEvent event, String skill) {
         event.deferReply(true).queue(
                 hook -> {
-                    var mentores = jBotData.getMentores()
-                            .stream()
-                            .filter(Objects::nonNull)
-                            .filter(m -> m.getSkills().stream().anyMatch(s -> s.getName().toLowerCase().contains(skill.toLowerCase())))
-                            .collect(Collectors.toList());
-
+                    var mentores = jBotData.listMentoresBySkill(skill);
 
                     String response = mentores.stream().map(Mentor::getName)
                             .collect(Collectors.joining("\n"));
