@@ -8,7 +8,7 @@ public class JBotDataTest {
     @Test
     public void testFindMentoresBySkill() {
 
-        BotMessageListener listener = BotMessageListener();
+        BotMessageListener listener = new BotMessageListener(null);
 
     }
 

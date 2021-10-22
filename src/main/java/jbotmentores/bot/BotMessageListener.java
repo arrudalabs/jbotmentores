@@ -1,9 +1,14 @@
 package jbotmentores.bot;
 
 import jbotmentores.model.JBotData;
+import jbotmentores.model.Mentor;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class BotMessageListener extends ListenerAdapter {
 
@@ -15,16 +20,16 @@ public class BotMessageListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandEvent event) {
-        if (event.getSubcommandName() == "list") {
-            if (event.getOptions().contains("dia")) {
+        if ("list".equals(event.getSubcommandName())) {
+            if (event.getOptions().stream().anyMatch(o -> o.getName().contains("dia"))) {
                 listMentorsByDay(event, event.getOption("dia").getAsLong());
             }
 
-            if (event.getOptions().contains("skill")) {
+            if (event.getOptions().stream().anyMatch(o -> o.getName().contains("skill"))) {
                 listMentorsBySkill(event, event.getOption("skill").getAsString());
             }
 
-            if (event.getOptions().contains("user")) {
+            if (event.getOptions().stream().anyMatch(o -> o.getName().contains("user"))) {
                 listUser(event, event.getOption("user").getAsUser());
             }
         }
@@ -39,11 +44,26 @@ public class BotMessageListener extends ListenerAdapter {
     }
 
     private void listMentorsBySkill(SlashCommandEvent event, String skill) {
-        var mentores = jBotData.mentores.stream().filter(m -> m.getSkills().stream().anyMatch(s -> s.getName().toLowerCase().contains(skill.toLowerCase())));
+        event.deferReply(true).queue(
+                hook -> {
+                    var mentores = jBotData.getMentores()
+                            .stream()
+                            .filter(Objects::nonNull)
+                            .filter(m -> m.getSkills().stream().anyMatch(s -> s.getName().toLowerCase().contains(skill.toLowerCase())))
+                            .collect(Collectors.toList());
 
-        event.reply(mentores.toString())
-                .setEphemeral(true)
-                .queue();
+
+                    String response = mentores.stream().map(Mentor::getName)
+                            .collect(Collectors.joining("\n"));
+
+                    if(response.isEmpty()){
+                        response="Desculpe, mas não encontrei mentores com esse skill  :anguished:";
+                    }
+
+                    hook.getInteraction().getMember().getUser().getAsTag();
+                    hook.sendMessage(response).queue();
+                }
+        );
     }
 
     private void listMentorsByDay(SlashCommandEvent event, Long dia) {

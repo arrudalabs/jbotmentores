@@ -1,5 +1,7 @@
 package jbotmentores.model;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -9,7 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class Slot {
+public class Slot implements Comparable<Slot> {
 
     private final LocalDateTime from;
     private final LocalDateTime to;
@@ -94,5 +96,10 @@ public class Slot {
     @Override
     public int hashCode() {
         return Objects.hash(from, to);
+    }
+
+    @Override
+    public int compareTo(@NotNull Slot o) {
+        return this.getFrom().compareTo(o.from);
     }
 }

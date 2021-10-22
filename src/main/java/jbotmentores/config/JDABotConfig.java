@@ -26,8 +26,9 @@ public class JDABotConfig {
 
     private JBotData jBotData;
 
-    public JDABotConfig(Environment environment) {
+    public JDABotConfig(Environment environment, JBotData jBotData) {
         this.environment = environment;
+        this.jBotData = jBotData;
     }
 
     @PostConstruct
