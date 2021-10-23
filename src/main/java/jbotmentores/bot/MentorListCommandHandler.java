@@ -55,7 +55,9 @@ public class MentorListCommandHandler {
             return;
         }
 
+        // TODO filter out slots in the past
         var mentores = mentorRepository.findByName(mentorName.toLowerCase()).collect(Collectors.toList());
+
         if (mentores.isEmpty()) {
             hook.sendMessage("Ué! Não encontrei ninguém com esse nome :thinking: ").queue();
         } else {
