@@ -5,7 +5,6 @@ import org.springframework.util.StringUtils;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
-import java.time.temporal.ChronoField;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -73,21 +72,18 @@ public class Mentor {
 
     @Override
     public String toString() {
-        return this.toString(true);
+        var slotsFormatted = formatSlots();
+        return String.format("**%s**", name) + "\nPode ajudar com: " +
+                skills.toString() +
+                "\n" +
+                slotsFormatted +
+                "\n\n";
     }
 
-    public String toString(boolean printDay) {
-        var slotsFormatted = formatSlots(printDay);
-        return String.format("%s - Pode ajudar com: %s - %s ", name, skills.toString(), slotsFormatted);
-    }
-
-    private String formatSlots(boolean printDay) {
-        StringBuilder result = new StringBuilder();
+    private String formatSlots() {
+        StringBuilder result = new StringBuilder("Horários disponíveis: :clock1: \n");
         for (Slot s : slots) {
-            if (printDay)
-                result.append("Dia: ").append(s.getStartAt().get(ChronoField.DAY_OF_MONTH)).append(" ");
-
-            result.append("Horarios: ").append(s.getStartAt().toLocalTime())
+            result.append(" às ").append(s.getStartAt().toLocalTime())
                     .append("-")
                     .append(s.getEndAt().toLocalTime())
                     .append("\n");
@@ -95,6 +91,7 @@ public class Mentor {
         return result.toString();
     }
 
+    // TODO sort slots by DAY
     public Set<Slot> getSlots() {
         return slots;
     }
