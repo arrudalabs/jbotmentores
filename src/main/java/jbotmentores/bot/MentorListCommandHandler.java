@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,19 +59,25 @@ public class MentorListCommandHandler {
         if (mentores.isEmpty()) {
             hook.sendMessage("Ué! Não encontrei ninguém com esse nome :thinking: ").queue();
         } else {
-            final String mentoresFormatted = formatMentores(mentores);
-            hook.sendMessage(mentoresFormatted).queue();
+            if (mentores.size() == 1) {
+                hook.sendMessage("Encontrei alguém:").queue();
+            } else {
+                hook.sendMessage("Encontrei esses mentores:").queue();
+            }
+            LocalDateTime now = LocalDateTime.now();
+            for (Mentor m : mentores) {
+                StringBuilder sb = new StringBuilder("");
+                sb.append("```txt\n");
+                sb.append(m.print(s -> s, (slots) -> {
+                    return slots.stream().filter(slot -> now.isBefore(slot.getStartAt())).collect(Collectors.toCollection(TreeSet::new));
+                }));
+                sb.append("\n");
+                sb.append("```");
+                hook.sendMessage(sb.toString()).queue();
+            }
+
         }
 
-    }
-
-    private String formatMentores(List<Mentor> mentores) {
-        StringBuilder sb = new StringBuilder("Encontrei os seguintes mentores: \n");
-        for (Mentor m : mentores) {
-            sb.append(m.toString());
-            sb.append("\n");
-        }
-        return sb.toString();
     }
 
     private void listMentorsByDay(InteractionHook hook, SlashCommandEvent event, Long dia) {
