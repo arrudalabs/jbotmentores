@@ -5,7 +5,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import javax.transaction.Transactional;
@@ -66,9 +65,8 @@ public class JBotData {
                     .map(String::trim)
                     .collect(Collectors.toSet());
 
-            Set<Slot> slots = new TreeSet<>();
             String dia22 = data.getOrDefault(3, "");
-            slots.addAll(loadDay(LocalDate.of(2021, 10, 22), dia22));
+            Set<Slot> slots = new TreeSet<>(loadDay(LocalDate.of(2021, 10, 22), dia22));
             String dia23 = data.getOrDefault(4, "");
             slots.addAll(loadDay(LocalDate.of(2021, 10, 23), dia23));
             String dia24 = data.getOrDefault(5, "");
@@ -130,7 +128,7 @@ public class JBotData {
             for (int i = 0; i < wb.getNumberOfSheets(); i++) {
                 Sheet sheet = wb.getSheetAt(i);
                 System.out.println(wb.getSheetName(i));
-                if(!"Mentoria | colabfest 2021".equalsIgnoreCase(wb.getSheetName(i))){
+                if (!"Mentoria | colabfest 2021".equalsIgnoreCase(wb.getSheetName(i))) {
                     continue;
                 }
                 for (Row row : sheet) {

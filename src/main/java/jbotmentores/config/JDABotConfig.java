@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -22,7 +21,6 @@ import org.springframework.core.env.Environment;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.security.auth.login.LoginException;
-import java.util.Collections;
 
 @Configuration
 public class JDABotConfig {
@@ -63,10 +61,8 @@ public class JDABotConfig {
     }
 
     private void updateCommands(JDA jda) {
-        // These commands take up to an hour to be activated after creation/update/delete
         CommandListUpdateAction commands = jda.updateCommands();
 
-        // Moderation commands with required options
         commands.addCommands(
                 new CommandData("mentor", "Confira a info sobre os mentores do evento")
                         .addSubcommands(
@@ -76,13 +72,11 @@ public class JDABotConfig {
                                                 .addChoice("23", 23)
                                                 .addChoice("24", 24))
                                         .addOptions(new OptionData(OptionType.STRING, "skill", "Informe o skill"))
-                                        .addOptions(new OptionData(OptionType.USER, "user", "Mencione o mentor"))
-//                                ,new SubcommandData("ativar", "Ativar mentor")
-//                                        .addOptions(new OptionData(OptionType.STRING, "e-mail", "E-mail do mentor"))
+                                        .addOptions(new OptionData(OptionType.STRING, "name", "Informe nome do mentor para visualizar as suas skils e horários disponíveis"))
                         )
-                // This command requires a parameter
+
         );
-        // Send the new set of commands to discord, this will override any existing global commands with the new set provided here
+
         commands.queue();
     }
 

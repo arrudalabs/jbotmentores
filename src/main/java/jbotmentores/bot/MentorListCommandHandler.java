@@ -4,14 +4,15 @@ import jbotmentores.model.DiscordInfoRepository;
 import jbotmentores.model.Mentor;
 import jbotmentores.model.MentorRepository;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -35,17 +36,41 @@ public class MentorListCommandHandler {
         } else if (event.getOptions().stream().anyMatch(o -> o.getName().contains("skill"))) {
             listMentorsBySkill(hook, event, event.getOption("skill").getAsString());
             return;
-        } else if (event.getOptions().stream().anyMatch(o -> o.getName().contains("user"))) {
-            listUser(hook, event, event.getOption("user").getAsUser());
+        } else if (event.getOptions().stream().anyMatch(o -> o.getName().contains("name"))) {
+            listUser(hook, event, event.getOption("name").getAsString());
             return;
+        } else {
+            hook.sendMessage("Desculpe, não encontrei a opcão que você digitou: " + event.getOptions())
+                    .setEphemeral(true)
+                    .queue();
         }
     }
 
-    private void listUser(InteractionHook hook, SlashCommandEvent event, User user) {
-        hook.sendMessage("Desculpe, mas ainda não estou pronto  :anguished:")
-                .setEphemeral(true)
-                .queue();
+    private void listUser(InteractionHook hook, SlashCommandEvent event, String mentorName) {
+        if (StringUtils.isBlank(mentorName)) {
+            hook.sendMessage("Por favor, informe o nome da pessoa!")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
 
+        var mentores = mentorRepository.findByName(mentorName.toLowerCase()).collect(Collectors.toList());
+        if (mentores.isEmpty()) {
+            hook.sendMessage("Ué! Não encontrei ninguém com esse nome :thinking: ").queue();
+        } else {
+            final String mentoresFormatted = formatMentores(mentores);
+            hook.sendMessage(mentoresFormatted).queue();
+        }
+
+    }
+
+    private String formatMentores(List<Mentor> mentores) {
+        StringBuilder sb = new StringBuilder("Encontrei os seguintes mentores: \n");
+        for (Mentor m : mentores) {
+            sb.append(m.toString());
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     private void listMentorsByDay(InteractionHook hook, SlashCommandEvent event, Long dia) {
@@ -62,10 +87,7 @@ public class MentorListCommandHandler {
         var mentores = mentorRepository.findBySlotRange(start, end)
                 .map(mentorRepository::findByEmail)
                 .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(mentor -> {
-                    return true;
-                });
+                .map(Optional::get);
 
         var names = mentores.map(Mentor::getName)
                 .sorted().collect(Collectors.toList());
@@ -73,9 +95,7 @@ public class MentorListCommandHandler {
         if (names.isEmpty()) {
             messageBuilder.append("Desculpe, mas não encontrei mentores com esse skill  :anguished:");
         } else {
-            String rawNames = names
-                    .stream()
-                    .collect(Collectors.joining("\n"));
+            String rawNames = String.join("\n", names);
             messageBuilder.append(rawNames);
             messageBuilder.appendFormat("\n\nEncontramos %s mentore(s) o dia %s", names.size(), dia);
         }

@@ -14,6 +14,12 @@ public interface MentorRepository extends JpaRepository<Mentor, String> {
 
     @Query(
             nativeQuery = true,
+            value = "select * from mentor where lower(name) like '%' || ? || '%'"
+    )
+    Stream<Mentor> findByName(String name);
+
+    @Query(
+            nativeQuery = true,
             value = "select distinct mentor_email from mentor_skills where lower(skills) like lower('%' || ? || '%')"
     )
     Stream<String> findBySkill(String skill);
